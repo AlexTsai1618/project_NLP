@@ -1,0 +1,89 @@
+
+from django.shortcuts import render,render_to_response
+from .models import Music
+#from .models import fucker
+import json
+from django.http import HttpResponse
+import os
+import datetime
+import sqlite3
+# Create your views here.
+def hello_view(request):
+    raw = Music.objects.filter().all()
+
+    return render(request, 'hello_django.html', {
+        'data':  raw,
+    })
+
+def index(request):
+    return render(request, 'index.html', {
+    })
+def search_form(request):
+   return render_to_response('search_form.html')
+def test(request):
+    # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ 
+    path_to_json = '../project_NLP/bin/JSON_DATAS/'
+    json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
+    conn=sqlite3.connect('../db.sqlite3')
+    c=conn.cursor
+    # here I define my pandas Dataframe with the columns I want to get from the json
+    jsons_data = pd.DataFrame(columns=['game', 'time', 'review'])  # 'country', 'city', 'long/lat'])
+
+    # we need both the json and an index number so use enumerate()
+    for index, js in enumerate(json_files):
+        with open(os.path.join(path_to_json, js)) as json_file:
+            json_text = json.load(json_file)
+            # here you need to know the layout of your json and each json has to have
+            # the same structure (obviously not the structure I have here)
+            # game = json_text[0]["Game"]
+            reviews = json_text[1]['reviews']
+            len_review = len(reviews)
+            for i in range(0, len(reviews)):
+                dreview = json_text[1]['reviews'][i]['review']
+                utime = json_text[1]['reviews'][i]['timestamp_updated']
+                dtime = datetime.utcfromtimestamp(utime).strftime('%Y-%m-%d %H:%M:%S')
+                dgame = json_text[0]['Game']
+                
+                c.execute("INSERT INTO music(game,time,review) VALUES(?,?,?);" (dgame,dtime,dreview))
+                #newitem = Music(review = review ,time = time,game = game)
+                #newitem.save()
+                conn.commit()
+                jsons_data.loc[index]=['game','time','review']
+    
+    
+    return HttpResponse("<h1 align='center'>JSON Done</h1><script>alert('Done')</script>")
+
+def print1(request):
+    rrr = Music.objects.filter().all()
+
+
+    return render(request, 'print1.html', {
+        'ddd': rrr,
+    })
+def search(request):
+    conn = sqlite3.connect('db.sqlite3')
+    c = conn.cursor()
+    game_name = []
+    request.encoding = 'utf-8'
+    if 'q' in request.GET:
+        game = request.GET['q']
+        cursor = c.execute("SELECT positive,negative,game FROM np where game = ?",(game,))
+        
+    else:
+        game = 'nullll'
+    #return HttpResponse(message)
+    #raw = Music.objects.filter(game = game)
+    raw = list(cursor)
+    positive = raw[0][0]
+    negative = raw[0][1]
+    for i in range(0,len(raw)):
+        if not raw[i][2] in game_name:
+           game_name.append(raw[i][2])
+    return render(request, 'proportion1.html', {
+        'data':  raw,
+        'positive':positive,
+        'negative':negative,
+        'game_name':game_name,
+    })
+def search(request):

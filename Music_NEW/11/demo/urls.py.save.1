@@ -1,0 +1,13 @@
+from django.conf.urls import url
+from django.contrib import admin
+from musics.views import hello_view, test, index,print1,search
+from fff
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'^hello/', hello_view),
+    url(r'^test/', test),
+    url(r'^print1/', print1),
+    url(r'^index/',index),
+    url(r'^search-form$', search.search_form),
+    url(r'^search$', search.search)
+]
